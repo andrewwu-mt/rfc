@@ -35,42 +35,67 @@ public class Compare {
 			Map<String, Map<String, Map<String, String>>> edmSheetMap = edmFileMap.get(filename);
 			Map<String, Map<String, Map<String, String>>> fbSheetMap = fbFileMap.get(filename);
 			
-			Map<String, Map<String, Map<String, String>>> sheetMap = new HashMap<String, Map<String, Map<String, String>>>();
-			for(String sheetName : edmSheetMap.keySet()){
-				String rule = getRule(sheetName.trim());
-				Integer ruleType = Integer.valueOf(rule.split(",")[0]);
-				Double ruleLimit = Double.valueOf(rule.split(",")[1]);
-				
-				Map<String, Map<String, String>> edmIdentMap = edmSheetMap.get(sheetName);
-				Map<String, Map<String, String>> fbIdentMap = fbSheetMap.get(sheetName);
-				
-				Map<String, Map<String, String>> identMap = new HashMap<String, Map<String, String>>();
-				for(String identifier : edmIdentMap.keySet()){
-					Map<String, String> edmColMap = edmIdentMap.get(identifier);
-					Map<String, String> fbColMap = fbIdentMap.get(identifier);
+			if(edmSheetMap != null && fbSheetMap != null){
+				Map<String, Map<String, Map<String, String>>> sheetMap = new HashMap<String, Map<String, Map<String, String>>>();
+				for(String sheetName : edmSheetMap.keySet()){
+					String rule = getRule(sheetName.trim());
+					Integer ruleType = Integer.valueOf(rule.split(",")[0]);
+					Double ruleLimit = Double.valueOf(rule.split(",")[1]);
 					
-					Map<String, String> colMap = new HashMap<String, String>();
-					for(String colName : edmColMap.keySet()){
-						String edmVal = edmColMap.get(colName);
-						String fbVal = fbColMap.get(colName);
-						if(edmVal!=null && fbVal!=null && !"".equals(edmVal) && !"".equals(fbVal)){
-							Double edm = Double.valueOf(edmVal);
-							Double fb = Double.valueOf(fbVal);
-							if(ruleType == 1){
-								Double diff = Math.abs(fb-edm);
-								if(diff > ruleLimit) colMap.put(colName, edm+","+fb+","+diff);
-							} else {
-								Double diff = (Math.abs(fb-edm) / fb) * 100;
-								if(diff > ruleLimit) colMap.put(colName, edm+","+fb+","+diff+"%");
-							}
+					Map<String, Map<String, String>> edmIdentMap = edmSheetMap.get(sheetName);
+					Map<String, Map<String, String>> fbIdentMap = fbSheetMap.get(sheetName);
+					
+					if(edmIdentMap != null && fbIdentMap != null){
+						Map<String, Map<String, String>> identMap = new HashMap<String, Map<String, String>>();
+						for(String identifier : edmIdentMap.keySet()){
+							Map<String, String> edmColMap = edmIdentMap.get(identifier);
+							Map<String, String> fbColMap = fbIdentMap.get(identifier);
 							
+							if(edmColMap != null && fbColMap != null){
+								Map<String, String> colMap = new HashMap<String, String>();
+								for(String colName : edmColMap.keySet()){
+									String edmVal = edmColMap.get(colName);
+									String fbVal = fbColMap.get(colName);
+									
+									if((edmVal!=null && !"".equals(edmVal)) && (fbVal!=null && !"".equals(fbVal))){
+										try{
+											if(colName.trim().equals("Coupon Rate")){
+												if(!edmVal.equals(fbVal)) colMap.put(colName, edmVal+","+fbVal+",Not same");
+											} else {
+												if(edmVal.contains(" ")){
+													edmVal = edmVal.split(" ")[0];
+													fbVal = fbVal.split(" ")[0];
+												}
+												
+												try{
+													Double edm = Double.valueOf(edmVal);
+													Double fb = Double.valueOf(fbVal);
+													if(ruleType == 1){
+														Double diff = Math.abs(fb-edm);
+														if(diff > ruleLimit) colMap.put(colName, edm+","+fb+","+diff);
+													} else {
+														Double diff = (Math.abs(fb-edm) / fb) * 100;
+														if(diff > ruleLimit) colMap.put(colName, edm+","+fb+","+diff+"%");
+													}
+												}catch(Exception e){
+													colMap.put(colName, edmColMap.get(colName)+","+fbColMap.get(colName)+",Empty");
+												}
+											}
+										}catch(Exception e){
+											e.printStackTrace();
+										}
+									}
+									
+									
+								}
+								if(colMap.size() != 0) identMap.put(identifier, colMap);
+							}
 						}
+						if(identMap.size() != 0) sheetMap.put(sheetName, identMap);
 					}
-					if(colMap.size() != 0) identMap.put(identifier, colMap);
 				}
-				if(identMap.size() != 0) sheetMap.put(sheetName, identMap);
+				if(sheetMap.size() != 0) fileMap.put(filename, sheetMap);
 			}
-			if(sheetMap.size() != 0) fileMap.put(filename, sheetMap);
 		}
 	}
 	
