@@ -1,0 +1,10 @@
+DELEGATES_PREFERENCE=delegateValidatorList
+USER_BUILD_PREFERENCE=enabledBuildValidatorListorg.eclipse.jst.j2ee.internal.classpathdep.ClasspathDependencyValidator;com.genuitec.eclipse.jsf.facelets.FaceletsValidator;
+USER_MANUAL_PREFERENCE=enabledManualValidatorListorg.eclipse.jst.j2ee.internal.classpathdep.ClasspathDependencyValidator;com.genuitec.eclipse.jsf.facelets.FaceletsValidator;
+USER_PREFERENCE=overrideGlobalPreferencestruedisableAllValidationfalseversion1.2.501.me201405280815
+eclipse.preferences.version=1
+override=true
+suspend=false
+vals/com.genuitec.eclipse.struts2.Struts2Validator/global=FF01
+vals/com.genuitec.eclipse.struts2.model.validator/global=FF01
+vf.version=3
