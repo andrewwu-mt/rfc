@@ -53,7 +53,7 @@ public class CompareAction extends ActionSupport{
 				FileUtils.deleteQuietly(file); //Delete zip file
 			}
 			
-			new Compare().compareFile(input_path, edmList, fbList); //Start comparing
+			new Compare().startCompare(input_path, edmList, fbList); //Start comparing
 			
 			
 		} catch (IOException e) {

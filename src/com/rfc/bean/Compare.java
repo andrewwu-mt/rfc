@@ -2,7 +2,6 @@ package com.rfc.bean;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -15,28 +14,73 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 
 public class Compare {
 	
-	public void compareFile(String input_path, List<String> edmList, List<String> fbList){
+	public void startCompare(String input_path, List<String> edmList, List<String> fbList){
+		Map<String, Map<String, Map<String, Map<String, String>>>> edmFileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
+		Map<String, Map<String, Map<String, Map<String, String>>>> fbFileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
+
 		try{
-			Map<String, Map<String, List<String>>> edmMap = new HashMap<String, Map<String, List<String>>>();
-			Map<String, Map<String, List<String>>> fbMap = new HashMap<String, Map<String, List<String>>>();
-			Map<String, List<String>> edmSheetMap = new HashMap<String, List<String>>();
-			Map<String, List<String>> fbSheetMap = new HashMap<String, List<String>>();
+			gatherData(input_path+"EDM/", edmList, edmFileMap);
+			gatherData(input_path+"FB/", fbList, fbFileMap);
 			
-			gatherData(input_path+"EDM/", edmList, edmSheetMap, edmMap);
-			gatherData(input_path+"FB/", fbList, fbSheetMap, fbMap);
-			
+			compareData(edmFileMap, fbFileMap);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 	}
 
+	public void compareData(Map<String, Map<String, Map<String, Map<String, String>>>> edmFileMap, Map<String, Map<String, Map<String, Map<String, String>>>> fbFileMap){
+		Map<String, Map<String, Map<String, Map<String, String>>>> fileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
+		
+		for(String filename : edmFileMap.keySet()){
+			Map<String, Map<String, Map<String, String>>> edmSheetMap = edmFileMap.get(filename);
+			Map<String, Map<String, Map<String, String>>> fbSheetMap = fbFileMap.get(filename);
+			
+			Map<String, Map<String, Map<String, String>>> sheetMap = new HashMap<String, Map<String, Map<String, String>>>();
+			for(String sheetName : edmSheetMap.keySet()){
+				String rule = getRule(sheetName.trim());
+				Integer ruleType = Integer.valueOf(rule.split(",")[0]);
+				Double ruleLimit = Double.valueOf(rule.split(",")[1]);
+				
+				Map<String, Map<String, String>> edmIdentMap = edmSheetMap.get(sheetName);
+				Map<String, Map<String, String>> fbIdentMap = fbSheetMap.get(sheetName);
+				
+				Map<String, Map<String, String>> identMap = new HashMap<String, Map<String, String>>();
+				for(String identifier : edmIdentMap.keySet()){
+					Map<String, String> edmColMap = edmIdentMap.get(identifier);
+					Map<String, String> fbColMap = fbIdentMap.get(identifier);
+					
+					Map<String, String> colMap = new HashMap<String, String>();
+					for(String colName : edmColMap.keySet()){
+						String edmVal = edmColMap.get(colName);
+						String fbVal = fbColMap.get(colName);
+						if(edmVal!=null && fbVal!=null && !"".equals(edmVal) && !"".equals(fbVal)){
+							Double edm = Double.valueOf(edmVal);
+							Double fb = Double.valueOf(fbVal);
+							if(ruleType == 1){
+								Double diff = Math.abs(fb-edm);
+								if(diff > ruleLimit) colMap.put(colName, edm+","+fb+","+diff);
+							} else {
+								Double diff = (Math.abs(fb-edm) / fb) * 100;
+								if(diff > ruleLimit) colMap.put(colName, edm+","+fb+","+diff+"%");
+							}
+							
+						}
+					}
+					if(colMap.size() != 0) identMap.put(identifier, colMap);
+				}
+				if(identMap.size() != 0) sheetMap.put(sheetName, identMap);
+			}
+			if(sheetMap.size() != 0) fileMap.put(filename, sheetMap);
+		}
+	}
 	
-	public void gatherData(String path, List<String> list, Map<String, List<String>> sheetMap, Map<String, Map<String, List<String>>> map){
+	public void gatherData(String path, List<String> list, Map<String, Map<String, Map<String, Map<String, String>>>> fileMap){
 		for(String filename : list){
 			try{
 				InputStream is = new FileInputStream(path+filename);
 				HSSFWorkbook wb = new HSSFWorkbook(is);
-				
+
+				Map<String, Map<String, Map<String, String>>> sheetMap = new HashMap<String, Map<String, Map<String, String>>>();
 				for(int i=0 ; i<wb.getNumberOfSheets() ; i++){
 					HSSFSheet sheet = wb.getSheetAt(i);
 					String sheetName = sheet.getSheetName();
@@ -48,126 +92,150 @@ public class Compare {
 							sheetName.trim().equals("Bond_Vol") || 
 							sheetName.trim().equals("Equity_Vol") || 
 							sheetName.trim().equals("Swaption_Vol")) nameCol = 1;
-		
-						List<String> cellList = new ArrayList<String>();
-						
+
+						Map<String, Map<String, String>> identMap = new HashMap<String, Map<String, String>>();
 						for (int k=0 ; k<sheet.getLastRowNum()+1 ; k++){
+							
 							if(k>0){
-								try{
-									HSSFRow row = sheet.getRow(k);
-									
-									for(int j=0 ; j<row.getLastCellNum() ; j++){
-										List<Integer> intList = Arrays.asList(intArr);
-										
-										if(intList.contains(j)){
-											if(!sheetName.toLowerCase().contains("vol")){
-												String columnName = sheet.getRow(0).getCell(j).getStringCellValue();
-												HSSFCell cell = row.getCell(j);
-												String value = cell.getStringCellValue();
-												if(value != null && !"".equals(value)){
-													String identifier = row.getCell(nameCol).toString();
-													String result = identifier + "," + columnName + "," + value;
-													cellList.add(result);
-												}
-											} else {
-												if(!sheetName.toLowerCase().contains("swaption_vol")){
-													if(k % 2 != 0){
+								HSSFRow row = sheet.getRow(k);
+								if(row != null){
+									try{
+										Map<String, String> colMap = new HashMap<String, String>();
+										for(int j=0 ; j<row.getLastCellNum() ; j++){
+											List<Integer> intList = Arrays.asList(intArr);
+											
+											if(intList.contains(j)){
+												if(!sheetName.toLowerCase().contains("vol")){
+													String columnName = sheet.getRow(0).getCell(j).getStringCellValue();
+													HSSFCell cell = row.getCell(j);
+													String value = cell.getStringCellValue();
+													if(value != null && !"".equals(value)){
 														String identifier = row.getCell(nameCol).toString();
-														HSSFCell cell = row.getCell(j);
-														String columnName = cell.getStringCellValue();
-														String value = sheet.getRow(k+1).getCell(j).getStringCellValue();
-														if(value != null && !"".equals(value)){
-															String result = identifier + "," + columnName + "," + value;
-															cellList.add(result);
-														}
+														colMap.put(columnName, value);
+														identMap.put(identifier, colMap);
 													}
-												}else{
-													if(k == 1){
-														String identifier = row.getCell(k).toString();
-														for(int idx=0 ; idx<7 ; idx++){
-															Integer rowNum = idx+k+1;
-															String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
-															String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-															String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
-															if(value != null && !"".equals(value)){
-																String result = identifier + "," + rowName+"&"+columnName + "," + value;
-																cellList.add(result);
+												} else {
+													if(!sheetName.toLowerCase().contains("swaption_vol")){
+														if(k % 2 != 0){
+															try{
+																String identifier = row.getCell(nameCol).toString();
+																HSSFCell cell = row.getCell(j);
+																String columnName = cell.getStringCellValue();
+																String value = sheet.getRow(k+1).getCell(j).getStringCellValue();
+																if(value != null && !"".equals(value)){
+																	colMap.put(columnName, value);
+																	identMap.put(identifier, colMap);
+																}
+															}catch(Exception e){
+																e.printStackTrace();
 															}
-															
 														}
-													}
-													if(k == 9){
-														String identifier = row.getCell(k).toString();
-														for(int idx=0 ; idx<14 ; idx++){
-															Integer rowNum = idx+k+1;
-															String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
-															String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-															String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
-															if(value != null && !"".equals(value)){
-																String result = identifier + "," + rowName+"&"+columnName + "," + value;
-																cellList.add(result);
+													}else{
+														if(k == 1){
+															try{
+																String identifier = row.getCell(nameCol).toString();
+																for(int idx=0 ; idx<7 ; idx++){
+																	Integer rowNum = idx+k+1;
+																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
+																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
+																	String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
+																	if(value != null && !"".equals(value)){
+																		colMap.put(rowName+"&"+columnName, value);
+																		identMap.put(identifier, colMap);
+																	}
+																	
+																}
+															}catch(Exception e){
+																e.printStackTrace();
 															}
-															
 														}
-													}
-													if(k == 24){
-														String identifier = row.getCell(k).toString();
-														for(int idx=0 ; idx<14 ; idx++){
-															Integer rowNum = idx+k+1;
-															String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
-															String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-															String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
-															if(value != null && !"".equals(value)){
-																String result = identifier + "," + rowName+"&"+columnName + "," + value;
-																cellList.add(result);
+														if(k == 9){
+															try{
+																String identifier = row.getCell(nameCol).toString();
+																for(int idx=0 ; idx<14 ; idx++){
+																	Integer rowNum = idx+k+1;
+																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
+																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
+																	String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
+																	if(value != null && !"".equals(value)){
+																		colMap.put(rowName+"&"+columnName, value);
+																		identMap.put(identifier, colMap);
+																	}
+																	
+																}
+															}catch(Exception e){
+																e.printStackTrace();
 															}
-															
 														}
-													}
-													if(k == 39){
-														String identifier = row.getCell(k).toString();
-														for(int idx=0 ; idx<7 ; idx++){
-															Integer rowNum = idx+k+1;
-															String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
-															String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-															String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
-															if(value != null && !"".equals(value)){
-																String result = identifier + "," + rowName+"&"+columnName + "," + value;
-																cellList.add(result);
+														if(k == 24){
+															try{
+																String identifier = row.getCell(nameCol).toString();
+																for(int idx=0 ; idx<14 ; idx++){
+																	Integer rowNum = idx+k+1;
+																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
+																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
+																	String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
+																	if(value != null && !"".equals(value)){
+																		colMap.put(rowName+"&"+columnName, value);
+																		identMap.put(identifier, colMap);
+																	}
+																	
+																}
+															}catch(Exception e){
+																e.printStackTrace();
 															}
-															
 														}
-													}
-													if(k == 47){
-														String identifier = row.getCell(k).toString();
-														for(int idx=0 ; idx<7 ; idx++){
-															Integer rowNum = idx+k+1;
-															String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
-															String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-															String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
-															if(value != null && !"".equals(value)){
-																String result = identifier + "," + rowName+"&"+columnName + "," + value;
-																cellList.add(result);
+														if(k == 39){
+															try{
+																String identifier = row.getCell(nameCol).toString();
+																for(int idx=0 ; idx<7 ; idx++){
+																	Integer rowNum = idx+k+1;
+																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
+																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
+																	String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
+																	if(value != null && !"".equals(value)){
+																		colMap.put(rowName+"&"+columnName, value);
+																		identMap.put(identifier, colMap);
+																	}
+																	
+																}
+															}catch(Exception e){
+																e.printStackTrace();
 															}
-															
 														}
+														if(k == 47){
+															try{
+																String identifier = row.getCell(nameCol).toString();
+																for(int idx=0 ; idx<7 ; idx++){
+																	Integer rowNum = idx+k+1;
+																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
+																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
+																	String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
+																	if(value != null && !"".equals(value)){
+																		colMap.put(rowName+"&"+columnName, value);
+																		identMap.put(identifier, colMap);
+																	}
+																	
+																}
+															}catch(Exception e){
+																e.printStackTrace();
+															}
+														}
+														
 													}
-													
 												}
 											}
 										}
+									}catch(Exception e){
+										e.printStackTrace();
 									}
-								}catch(Exception e){
-									e.printStackTrace();
 								}
 							}
 						}
-						
-						sheetMap.put(sheetName, cellList); //Save data per sheet
+						sheetMap.put(sheetName, identMap);
 					}
 				}
-				
-				map.put(filename, sheetMap);
+				fileMap.put(filename, sheetMap);
 			}catch(Exception e){
 				e.printStackTrace();
 			}
