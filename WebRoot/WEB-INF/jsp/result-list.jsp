@@ -6,7 +6,7 @@
 <div class="content clear-fix">
 	<div class="main-title container"><h1><a href="index">File Upload</a> | <a href="result-list">Result List</a></div>
 	<div class="container c-95">
- 		<table border="1">
+ 		<table border="1" cellpadding="5">
  			<tr>
  				<th>Filename</th>
  			</tr>

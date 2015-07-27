@@ -23,7 +23,7 @@ $(document).ready(function(){
 	<div class="main-title container"><h1><a href="index">File Upload</a> | <a href="result-list">Result List</a></div>
 	<div class="container c-95">
 		<s:form action="compare-file" enctype="multipart/form-data" method="POST" theme="simple" id="form">
-	 		<table border="1">
+	 		<table border="1" cellpadding="5">
 	 			<tr>
 	 				<td>Evaluation Date</td>
 	 				<td><s:textfield id="evalDate" name="evalDate" required="true" /></td>

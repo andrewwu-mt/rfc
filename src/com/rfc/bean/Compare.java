@@ -47,9 +47,11 @@ public class Compare {
 			hRow.createCell(1).setCellValue("Sheet Name");
 			hRow.createCell(2).setCellValue("Risk Factor ID");
 			hRow.createCell(3).setCellValue("Column Name");
-			hRow.createCell(4).setCellValue("EDM Value");
-			hRow.createCell(5).setCellValue("Fubon Value");
-			hRow.createCell(6).setCellValue("Reason");
+			hRow.createCell(4).setCellValue("Rule type");
+			hRow.createCell(5).setCellValue("Rule limit");
+			hRow.createCell(6).setCellValue("EDM Value");
+			hRow.createCell(7).setCellValue("Fubon Value");
+			hRow.createCell(8).setCellValue("Diff/Ratio");
 			
 			//Create content
 			Integer rowIdx = 1;
@@ -65,18 +67,22 @@ public class Compare {
 						for(String colName : colMap.keySet()){
 							String value = colMap.get(colName);
 							String[] valArr = value.split(",");
-							String edmVal = valArr[0];
-							String fbVal = valArr[1];
-							String reason = valArr[2];
+							String ruleTypeStr = valArr[0];
+							String ruleLimit = valArr[1];
+							String edmVal = valArr[2];
+							String fbVal = valArr[3];
+							String reason = valArr[4];
 	
 							Row row = sheet.createRow(rowIdx);
 							row.createCell(0).setCellValue(filename);
 							row.createCell(1).setCellValue(sheetName);
 							row.createCell(2).setCellValue(identifier);
 							row.createCell(3).setCellValue(colName);
-							row.createCell(4).setCellValue(edmVal);
-							row.createCell(5).setCellValue(fbVal);
-							row.createCell(6).setCellValue(reason);
+							row.createCell(4).setCellValue(ruleTypeStr);
+							row.createCell(5).setCellValue(ruleLimit);
+							row.createCell(6).setCellValue(edmVal);
+							row.createCell(7).setCellValue(fbVal);
+							row.createCell(8).setCellValue(reason);
 							
 							rowIdx++;
 						}
@@ -115,6 +121,8 @@ public class Compare {
 					String rule = getRule(sheetName.trim());
 					Integer ruleType = Integer.valueOf(rule.split(",")[0]);
 					Double ruleLimit = Double.valueOf(rule.split(",")[1]);
+					String ruleTypeStr = "Diff";
+					if(ruleType == 2) ruleTypeStr = "Ratio";
 					
 					Map<String, Map<String, String>> edmIdentMap = edmSheetMap.get(sheetName);
 					Map<String, Map<String, String>> fbIdentMap = fbSheetMap.get(sheetName);
@@ -134,7 +142,7 @@ public class Compare {
 									if((edmVal!=null && !"".equals(edmVal)) && (fbVal!=null && !"".equals(fbVal))){
 										try{
 											if(colName.trim().equals("Coupon Rate")){
-												if(!edmVal.equals(fbVal)) colMap.put(colName, edmVal+","+fbVal+",Not same");
+												if(!edmVal.equals(fbVal)) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edmVal+","+fbVal+",Not same");
 											} else {
 												if(edmVal.contains(" ")){
 													edmVal = edmVal.split(" ")[0];
@@ -146,13 +154,13 @@ public class Compare {
 													Double fb = Double.valueOf(fbVal);
 													if(ruleType == 1){
 														Double diff = Math.abs(fb-edm);
-														if(diff > ruleLimit) colMap.put(colName, edm+","+fb+","+diff);
+														if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edm+","+fb+","+diff);
 													} else {
 														Double diff = (Math.abs(fb-edm) / fb) * 100;
-														if(diff > ruleLimit) colMap.put(colName, edm+","+fb+","+diff+"%");
+														if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edm+","+fb+","+diff+"%");
 													}
 												}catch(Exception e){
-													colMap.put(colName, edmColMap.get(colName)+","+fbColMap.get(colName)+",Empty Value");
+													colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edmColMap.get(colName)+","+fbColMap.get(colName)+",Empty Value");
 												}
 											}
 										}catch(Exception e){
@@ -207,7 +215,10 @@ public class Compare {
 											
 											if(intList.contains(j)){
 												if(!sheetName.toLowerCase().contains("vol")){
-													String columnName = sheet.getRow(0).getCell(j).getStringCellValue();
+													HSSFCell cellCol = sheet.getRow(0).getCell(j);
+													cellCol.setCellType(Cell.CELL_TYPE_STRING);
+													String columnName = cellCol.getStringCellValue();
+													
 													HSSFCell cell = row.getCell(j);
 													cell.setCellType(Cell.CELL_TYPE_STRING);
 													String value = cell.getStringCellValue();
@@ -221,10 +232,13 @@ public class Compare {
 														if(k % 2 != 0){
 															try{
 																String identifier = row.getCell(nameCol).toString();
-																HSSFCell cell = row.getCell(j);
-																cell.setCellType(Cell.CELL_TYPE_STRING);
-																String columnName = cell.getStringCellValue();
-																String value = sheet.getRow(k+1).getCell(j).getStringCellValue();
+																HSSFCell cellCol = row.getCell(j);
+																cellCol.setCellType(Cell.CELL_TYPE_STRING);
+																String columnName = cellCol.getStringCellValue();
+																
+																HSSFCell cellVal = sheet.getRow(k+1).getCell(j);
+																cellVal.setCellType(Cell.CELL_TYPE_STRING);
+																String value = cellVal.getStringCellValue();
 																if(value != null && !"".equals(value)){
 																	colMap.put(columnName, value);
 																	identMap.put(identifier, colMap);
@@ -234,105 +248,33 @@ public class Compare {
 															}
 														}
 													}else{
-														if(k == 1){
-															try{
-																String identifier = row.getCell(nameCol).toString();
-																for(int idx=0 ; idx<7 ; idx++){
+														try{
+															String volName = null;
+															try{volName = row.getCell(nameCol).toString();}catch(Exception e){}
+															
+															if(volName != null){
+																Integer loopSize = getRowNum(volName);
+																for(int idx=0 ; idx<loopSize ; idx++){
 																	Integer rowNum = idx+k+1;
-																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
-																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-																	HSSFCell cell = sheet.getRow(rowNum).getCell(j);
-																	cell.setCellType(Cell.CELL_TYPE_STRING);
-																	String value = cell.getStringCellValue();
+																	HSSFCell cellRow = sheet.getRow(rowNum).getCell(15);
+																	cellRow.setCellType(Cell.CELL_TYPE_STRING);
+																	String rowName = cellRow.getStringCellValue();
+	
+																	HSSFCell cellCol = sheet.getRow(k).getCell(j);
+																	cellCol.setCellType(Cell.CELL_TYPE_STRING);
+																	String columnName = cellCol.getStringCellValue();
+																	
+																	HSSFCell cellVal = sheet.getRow(rowNum).getCell(j);
+																	cellVal.setCellType(Cell.CELL_TYPE_STRING);
+																	String value = cellVal.getStringCellValue();
 																	if(value != null && !"".equals(value)){
 																		colMap.put(rowName+"&"+columnName, value);
-																		identMap.put(identifier, colMap);
+																		identMap.put(volName, colMap);
 																	}
-																	
 																}
-															}catch(Exception e){
-																e.printStackTrace();
 															}
-														}
-														if(k == 9){
-															try{
-																String identifier = row.getCell(nameCol).toString();
-																for(int idx=0 ; idx<14 ; idx++){
-																	Integer rowNum = idx+k+1;
-																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
-																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-																	HSSFCell cell = sheet.getRow(rowNum).getCell(j);
-																	cell.setCellType(Cell.CELL_TYPE_STRING);
-																	String value = cell.getStringCellValue();
-																	if(value != null && !"".equals(value)){
-																		colMap.put(rowName+"&"+columnName, value);
-																		identMap.put(identifier, colMap);
-																	}
-																	
-																}
-															}catch(Exception e){
-																e.printStackTrace();
-															}
-														}
-														if(k == 24){
-															try{
-																String identifier = row.getCell(nameCol).toString();
-																for(int idx=0 ; idx<14 ; idx++){
-																	Integer rowNum = idx+k+1;
-																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
-																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-																	HSSFCell cell = sheet.getRow(rowNum).getCell(j);
-																	cell.setCellType(Cell.CELL_TYPE_STRING);
-																	String value = cell.getStringCellValue();
-																	if(value != null && !"".equals(value)){
-																		colMap.put(rowName+"&"+columnName, value);
-																		identMap.put(identifier, colMap);
-																	}
-																	
-																}
-															}catch(Exception e){
-																e.printStackTrace();
-															}
-														}
-														if(k == 39){
-															try{
-																String identifier = row.getCell(nameCol).toString();
-																for(int idx=0 ; idx<7 ; idx++){
-																	Integer rowNum = idx+k+1;
-																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
-																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-																	HSSFCell cell = sheet.getRow(rowNum).getCell(j);
-																	cell.setCellType(Cell.CELL_TYPE_STRING);
-																	String value = cell.getStringCellValue();
-																	if(value != null && !"".equals(value)){
-																		colMap.put(rowName+"&"+columnName, value);
-																		identMap.put(identifier, colMap);
-																	}
-																	
-																}
-															}catch(Exception e){
-																e.printStackTrace();
-															}
-														}
-														if(k == 47){
-															try{
-																String identifier = row.getCell(nameCol).toString();
-																for(int idx=0 ; idx<7 ; idx++){
-																	Integer rowNum = idx+k+1;
-																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
-																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-																	HSSFCell cell = sheet.getRow(rowNum).getCell(j);
-																	cell.setCellType(Cell.CELL_TYPE_STRING);
-																	String value = cell.getStringCellValue();
-																	if(value != null && !"".equals(value)){
-																		colMap.put(rowName+"&"+columnName, value);
-																		identMap.put(identifier, colMap);
-																	}
-																	
-																}
-															}catch(Exception e){
-																e.printStackTrace();
-															}
+														}catch(Exception e){
+															e.printStackTrace();
 														}
 														
 													}
@@ -530,5 +472,34 @@ public class Compare {
 		}
 		
 		return rule;
+	}
+
+	public Integer getRowNum(String volName){ 
+		Integer rowNum = null;
+		
+		switch(volName){
+			case "AUD SwaptionVol":
+				rowNum = 7;
+			break;
+
+			case "EUR SwaptionVol":
+				rowNum = 14;
+			break;
+
+			case "GBP SwaptionVol":
+				rowNum = 14;
+			break;
+
+			case "TWD SwaptionVol":
+				rowNum = 7;
+			break;
+
+			case "USD SwaptionVol":
+				rowNum = 7;
+			break;
+
+		}
+		
+		return rowNum;
 	}
 }
