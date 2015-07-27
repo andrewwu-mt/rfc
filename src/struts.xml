@@ -12,5 +12,18 @@
 		<action name="compare-file" class="com.rfc.action.CompareAction" method="compareFile">
 			<result name="success" type="redirect">index</result>
 		</action>   
+		
+		<action name="result-all" class="com.rfc.action.ResultAction" method="allRecords" />
+		
+    	<action name="result-download" class="OutputAction" method="downloadFile">
+	         <result name="success" type="stream">
+		  		<param name="contentType">application/octet-stream</param>
+		  		<param name="contentLength">contentLength</param>
+		  		<param name="bufferSize">4096</param>
+		  		<param name="inputName">downloadFile</param>
+		  		<param name="contentDisposition">attachment;filename=${fileName}</param>
+			</result>
+         </action>
+         
    	</package>
 </struts>    

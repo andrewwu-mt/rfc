@@ -1,6 +1,8 @@
 package com.rfc.bean;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,10 +13,14 @@ import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 
 public class Compare {
 	
-	public void startCompare(String input_path, List<String> edmList, List<String> fbList){
+	public void startCompare(String input_path, List<String> edmList, List<String> fbList, String evalDate){
 		Map<String, Map<String, Map<String, Map<String, String>>>> edmFileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
 		Map<String, Map<String, Map<String, Map<String, String>>>> fbFileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
 
@@ -22,13 +28,81 @@ public class Compare {
 			gatherData(input_path+"EDM/", edmList, edmFileMap);
 			gatherData(input_path+"FB/", fbList, fbFileMap);
 			
-			compareData(edmFileMap, fbFileMap);
+			Map<String, Map<String, Map<String, Map<String, String>>>> fileMap = compareData(edmFileMap, fbFileMap);
+			writeExcel(fileMap, evalDate);
+			System.out.println("DONE");
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 	}
 
-	public void compareData(Map<String, Map<String, Map<String, Map<String, String>>>> edmFileMap, Map<String, Map<String, Map<String, Map<String, String>>>> fbFileMap){
+	public void writeExcel(Map<String, Map<String, Map<String, Map<String, String>>>> fileMap, String evalDate){
+		try{
+			Workbook workbook = new HSSFWorkbook();
+			Sheet sheet = workbook.createSheet("RF Compare Result");
+			
+			//Create header
+			Row hRow = sheet.createRow(0);
+			hRow.createCell(0).setCellValue("File Name");
+			hRow.createCell(1).setCellValue("Sheet Name");
+			hRow.createCell(2).setCellValue("Risk Factor ID");
+			hRow.createCell(3).setCellValue("Column Name");
+			hRow.createCell(4).setCellValue("EDM Value");
+			hRow.createCell(5).setCellValue("Fubon Value");
+			hRow.createCell(6).setCellValue("Reason");
+			
+			//Create content
+			Integer rowIdx = 1;
+			for(String filename : fileMap.keySet()){
+				Map<String, Map<String, Map<String, String>>> sheetMap = fileMap.get(filename);
+				
+				for(String sheetName : sheetMap.keySet()){
+					Map<String, Map<String, String>> identMap = sheetMap.get(sheetName);
+					
+					for(String identifier : identMap.keySet()){
+						Map<String, String> colMap = identMap.get(identifier);
+						
+						for(String colName : colMap.keySet()){
+							String value = colMap.get(colName);
+							String[] valArr = value.split(",");
+							String edmVal = valArr[0];
+							String fbVal = valArr[1];
+							String reason = valArr[2];
+	
+							Row row = sheet.createRow(rowIdx);
+							row.createCell(0).setCellValue(filename);
+							row.createCell(1).setCellValue(sheetName);
+							row.createCell(2).setCellValue(identifier);
+							row.createCell(3).setCellValue(colName);
+							row.createCell(4).setCellValue(edmVal);
+							row.createCell(5).setCellValue(fbVal);
+							row.createCell(6).setCellValue(reason);
+							
+							rowIdx++;
+						}
+					}
+				}
+			}
+	
+			String output_path = new LoadProperties().load("output.path");
+			checkFolder(output_path);
+			File tempFile = new File(output_path + "result_"+ evalDate +".xls");
+			FileOutputStream fileOut = new FileOutputStream(tempFile);
+			workbook.write(fileOut);
+			fileOut.close();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+
+	public void checkFolder(String output_path){
+		File outputPath = new File(output_path);
+		if(!outputPath.exists()){
+			outputPath.mkdirs();
+		}
+	}
+	
+	public Map<String, Map<String, Map<String, Map<String, String>>>> compareData(Map<String, Map<String, Map<String, Map<String, String>>>> edmFileMap, Map<String, Map<String, Map<String, Map<String, String>>>> fbFileMap){
 		Map<String, Map<String, Map<String, Map<String, String>>>> fileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
 		
 		for(String filename : edmFileMap.keySet()){
@@ -78,7 +152,7 @@ public class Compare {
 														if(diff > ruleLimit) colMap.put(colName, edm+","+fb+","+diff+"%");
 													}
 												}catch(Exception e){
-													colMap.put(colName, edmColMap.get(colName)+","+fbColMap.get(colName)+",Empty");
+													colMap.put(colName, edmColMap.get(colName)+","+fbColMap.get(colName)+",Empty Value");
 												}
 											}
 										}catch(Exception e){
@@ -97,6 +171,8 @@ public class Compare {
 				if(sheetMap.size() != 0) fileMap.put(filename, sheetMap);
 			}
 		}
+		
+		return fileMap;
 	}
 	
 	public void gatherData(String path, List<String> list, Map<String, Map<String, Map<String, Map<String, String>>>> fileMap){
@@ -133,6 +209,7 @@ public class Compare {
 												if(!sheetName.toLowerCase().contains("vol")){
 													String columnName = sheet.getRow(0).getCell(j).getStringCellValue();
 													HSSFCell cell = row.getCell(j);
+													cell.setCellType(Cell.CELL_TYPE_STRING);
 													String value = cell.getStringCellValue();
 													if(value != null && !"".equals(value)){
 														String identifier = row.getCell(nameCol).toString();
@@ -145,6 +222,7 @@ public class Compare {
 															try{
 																String identifier = row.getCell(nameCol).toString();
 																HSSFCell cell = row.getCell(j);
+																cell.setCellType(Cell.CELL_TYPE_STRING);
 																String columnName = cell.getStringCellValue();
 																String value = sheet.getRow(k+1).getCell(j).getStringCellValue();
 																if(value != null && !"".equals(value)){
@@ -163,7 +241,9 @@ public class Compare {
 																	Integer rowNum = idx+k+1;
 																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
 																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-																	String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
+																	HSSFCell cell = sheet.getRow(rowNum).getCell(j);
+																	cell.setCellType(Cell.CELL_TYPE_STRING);
+																	String value = cell.getStringCellValue();
 																	if(value != null && !"".equals(value)){
 																		colMap.put(rowName+"&"+columnName, value);
 																		identMap.put(identifier, colMap);
@@ -181,7 +261,9 @@ public class Compare {
 																	Integer rowNum = idx+k+1;
 																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
 																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-																	String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
+																	HSSFCell cell = sheet.getRow(rowNum).getCell(j);
+																	cell.setCellType(Cell.CELL_TYPE_STRING);
+																	String value = cell.getStringCellValue();
 																	if(value != null && !"".equals(value)){
 																		colMap.put(rowName+"&"+columnName, value);
 																		identMap.put(identifier, colMap);
@@ -199,7 +281,9 @@ public class Compare {
 																	Integer rowNum = idx+k+1;
 																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
 																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-																	String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
+																	HSSFCell cell = sheet.getRow(rowNum).getCell(j);
+																	cell.setCellType(Cell.CELL_TYPE_STRING);
+																	String value = cell.getStringCellValue();
 																	if(value != null && !"".equals(value)){
 																		colMap.put(rowName+"&"+columnName, value);
 																		identMap.put(identifier, colMap);
@@ -217,7 +301,9 @@ public class Compare {
 																	Integer rowNum = idx+k+1;
 																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
 																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-																	String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
+																	HSSFCell cell = sheet.getRow(rowNum).getCell(j);
+																	cell.setCellType(Cell.CELL_TYPE_STRING);
+																	String value = cell.getStringCellValue();
 																	if(value != null && !"".equals(value)){
 																		colMap.put(rowName+"&"+columnName, value);
 																		identMap.put(identifier, colMap);
@@ -235,7 +321,9 @@ public class Compare {
 																	Integer rowNum = idx+k+1;
 																	String rowName = sheet.getRow(rowNum).getCell(15).getStringCellValue();
 																	String columnName = sheet.getRow(k).getCell(j).getStringCellValue();
-																	String value = sheet.getRow(rowNum).getCell(j).getStringCellValue();
+																	HSSFCell cell = sheet.getRow(rowNum).getCell(j);
+																	cell.setCellType(Cell.CELL_TYPE_STRING);
+																	String value = cell.getStringCellValue();
 																	if(value != null && !"".equals(value)){
 																		colMap.put(rowName+"&"+columnName, value);
 																		identMap.put(identifier, colMap);

@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 
 import com.opensymphony.xwork2.ActionSupport;
 import com.rfc.bean.Compare;
+import com.rfc.bean.LoadProperties;
 import com.rfc.bean.UnZip;
 
 public class CompareAction extends ActionSupport{
@@ -19,6 +20,8 @@ public class CompareAction extends ActionSupport{
 	private List<File> fileUpload = new ArrayList<File>();
 	private List<String> fileUploadContentType = new ArrayList<String>();
 	private List<String> fileUploadFileName = new ArrayList<String>();
+	
+	private String evalDate;
 	
 	public void checkFolder(String output_path){
 		File outputPath = new File(output_path);
@@ -31,7 +34,7 @@ public class CompareAction extends ActionSupport{
 		try {
 			List<String> edmList = new ArrayList<String>();
 			List<String> fbList = new ArrayList<String>();
-			String input_path = "C:/rfc/upload/";
+			String input_path = new LoadProperties().load("upload.path");
 			
 			for(int i=0 ; i<fileUpload.size() ; i++){
 				String dataType = "EDM/";
@@ -53,7 +56,7 @@ public class CompareAction extends ActionSupport{
 				FileUtils.deleteQuietly(file); //Delete zip file
 			}
 			
-			new Compare().startCompare(input_path, edmList, fbList); //Start comparing
+			new Compare().startCompare(input_path, edmList, fbList, evalDate); //Start comparing
 			
 			
 		} catch (IOException e) {
@@ -85,6 +88,14 @@ public class CompareAction extends ActionSupport{
 
 	public void setFileUploadFileName(List<String> fileUploadFileName) {
 		this.fileUploadFileName = fileUploadFileName;
+	}
+
+	public String getEvalDate() {
+		return evalDate;
+	}
+
+	public void setEvalDate(String evalDate) {
+		this.evalDate = evalDate;
 	}
 
 }
