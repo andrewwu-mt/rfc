@@ -5,17 +5,21 @@
 	
     <package name="default" namespace="/" extends="struts-default">  
               
+	    <result-types>  
+	    	<result-type name="result-message" class="com.rfc.action.ResultMessage" />  
+	    </result-types> 
+    
         <action name="*" class="com.rfc.action.IndexAction" >
         	<result name="success">/WEB-INF/jsp/{1}.jsp</result>
 		</action>
 		 
 		<action name="compare-file" class="com.rfc.action.CompareAction" method="compareFile">
-			<result name="success" type="redirect">index</result>
+			<result name="success" type="result-message">index</result>
 		</action>   
 		
 		<action name="result-all" class="com.rfc.action.ResultAction" method="allRecords" />
 		
-    	<action name="result-download" class="OutputAction" method="downloadFile">
+    	<action name="result-download" class="com.rfc.action.ResultAction" method="downloadFile">
 	         <result name="success" type="stream">
 		  		<param name="contentType">application/octet-stream</param>
 		  		<param name="contentLength">contentLength</param>

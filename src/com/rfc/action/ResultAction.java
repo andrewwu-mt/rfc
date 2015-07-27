@@ -34,7 +34,7 @@ public class ResultAction extends ActionSupport{
 		
 	    request.setAttribute("filenameList", filenameList);
 		return SUCCESS;
-	}
+	} 
 	
 
 	public String downloadFile() {
