@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -110,7 +111,9 @@ public class Compare {
 	
 	public Map<String, Map<String, Map<String, Map<String, String>>>> compareData(Map<String, Map<String, Map<String, Map<String, String>>>> edmFileMap, Map<String, Map<String, Map<String, Map<String, String>>>> fbFileMap){
 		Map<String, Map<String, Map<String, Map<String, String>>>> fileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
-		
+		DecimalFormat df = new DecimalFormat("#.#");
+        df.setMaximumFractionDigits(8);
+        
 		for(String filename : edmFileMap.keySet()){
 			Map<String, Map<String, Map<String, String>>> edmSheetMap = edmFileMap.get(filename);
 			Map<String, Map<String, Map<String, String>>> fbSheetMap = fbFileMap.get(filename);
@@ -154,10 +157,10 @@ public class Compare {
 													Double fb = Double.valueOf(fbVal);
 													if(ruleType == 1){
 														Double diff = Math.abs(fb-edm);
-														if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edm+","+fb+","+diff);
+														if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + df.format(edm)+","+df.format(fb)+","+diff);
 													} else {
 														Double diff = (Math.abs(fb-edm) / fb) * 100;
-														if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edm+","+fb+","+diff+"%");
+														if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + df.format(edm)+","+df.format(fb)+","+diff+"%");
 													}
 												}catch(Exception e){
 													colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edmColMap.get(colName)+","+fbColMap.get(colName)+",Empty Value");
