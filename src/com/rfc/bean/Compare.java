@@ -211,114 +211,118 @@ public class Compare {
 	
 	public void gatherData(String path, List<String> list, Map<String, Map<String, Map<String, Map<String, String>>>> fileMap){
 		for(String filename : list){
-			try{
-				InputStream is = new FileInputStream(path+filename);
-				HSSFWorkbook wb = new HSSFWorkbook(is);
-
-				Map<String, Map<String, Map<String, String>>> sheetMap = new HashMap<String, Map<String, Map<String, String>>>();
-				for(int i=0 ; i<wb.getNumberOfSheets() ; i++){
-					HSSFSheet sheet = wb.getSheetAt(i);
-					String sheetName = sheet.getSheetName();
-					Integer[] intArr = getColumnNumber(sheetName.trim());
-					if(intArr != null){
-						Integer nameCol = 0;
-						if(sheetName.trim().equals("T_Bill") || 
-							sheetName.trim().equals("FX_Vol_Moneyness_Term") || 
-							sheetName.trim().equals("Bond_Vol") || 
-							sheetName.trim().equals("Equity_Vol") || 
-							sheetName.trim().equals("Swaption_Vol")) nameCol = 1;
-
-						Map<String, Map<String, String>> identMap = new HashMap<String, Map<String, String>>();
-						for (int k=0 ; k<sheet.getLastRowNum()+1 ; k++){
-							
-							if(k>0){
-								HSSFRow row = sheet.getRow(k);
-								if(row != null){
-									try{
-										Map<String, String> colMap = new HashMap<String, String>();
-										for(int j=0 ; j<row.getLastCellNum() ; j++){
-											List<Integer> intList = Arrays.asList(intArr);
-											
-											if(intList.contains(j)){
-												if(!sheetName.toLowerCase().contains("vol")){
-													HSSFCell cellCol = sheet.getRow(0).getCell(j);
-													cellCol.setCellType(Cell.CELL_TYPE_STRING);
-													String columnName = cellCol.getStringCellValue();
-													
-													HSSFCell cell = row.getCell(j);
-													cell.setCellType(Cell.CELL_TYPE_STRING);
-													String value = cell.getStringCellValue();
-													if(value != null && !"".equals(value)){
-														String identifier = row.getCell(nameCol).toString();
-														colMap.put(columnName, value);
-														identMap.put(identifier, colMap);
-													}
-												} else {
-													if(!sheetName.toLowerCase().contains("swaption_vol")){
-														if(k % 2 != 0){
+			if(filename.contains(".xls")){
+				try{
+					InputStream is = new FileInputStream(path+filename);
+					HSSFWorkbook wb = new HSSFWorkbook(is);
+	
+					Map<String, Map<String, Map<String, String>>> sheetMap = new HashMap<String, Map<String, Map<String, String>>>();
+					for(int i=0 ; i<wb.getNumberOfSheets() ; i++){
+						HSSFSheet sheet = wb.getSheetAt(i);
+						String sheetName = sheet.getSheetName();
+						Integer[] intArr = getColumnNumber(sheetName.trim());
+						if(intArr != null){
+							Integer nameCol = 0;
+							if(sheetName.trim().equals("T_Bill") || 
+								sheetName.trim().equals("FX_Vol_Moneyness_Term") || 
+								sheetName.trim().equals("Bond_Vol") || 
+								sheetName.trim().equals("Equity_Vol") || 
+								sheetName.trim().equals("Swaption_Vol")) nameCol = 1;
+	
+							Map<String, Map<String, String>> identMap = new HashMap<String, Map<String, String>>();
+							for (int k=0 ; k<sheet.getLastRowNum()+1 ; k++){
+								
+								if(k>0){
+									HSSFRow row = sheet.getRow(k);
+									if(row != null){
+										try{
+											Map<String, String> colMap = new HashMap<String, String>();
+											for(int j=0 ; j<row.getLastCellNum() ; j++){
+												List<Integer> intList = Arrays.asList(intArr);
+												
+												if(intList.contains(j)){
+													if(!sheetName.toLowerCase().contains("vol")){
+														HSSFCell cellCol = sheet.getRow(0).getCell(j);
+														cellCol.setCellType(Cell.CELL_TYPE_STRING);
+														String columnName = cellCol.getStringCellValue();
+														
+														HSSFCell cell = row.getCell(j);
+														cell.setCellType(Cell.CELL_TYPE_STRING);
+														String value = cell.getStringCellValue();
+														if(value != null && !"".equals(value)){
+															String identifier = row.getCell(nameCol).toString();
+															colMap.put(columnName, value);
+															identMap.put(identifier, colMap);
+														}
+													} else {
+														if(!sheetName.toLowerCase().contains("swaption_vol")){
+															if(k % 2 != 0){
+																try{
+																	String identifier = row.getCell(nameCol).toString();
+																	HSSFCell cellCol = row.getCell(j);
+																	cellCol.setCellType(Cell.CELL_TYPE_STRING);
+																	String columnName = cellCol.getStringCellValue();
+																	
+																	HSSFCell cellVal = sheet.getRow(k+1).getCell(j);
+																	cellVal.setCellType(Cell.CELL_TYPE_STRING);
+																	String value = cellVal.getStringCellValue();
+																	if(value != null && !"".equals(value)){
+																		colMap.put(columnName, value);
+																		identMap.put(identifier, colMap);
+																	}
+																}catch(Exception e){
+																	e.printStackTrace();
+																}
+															}
+														}else{
 															try{
-																String identifier = row.getCell(nameCol).toString();
-																HSSFCell cellCol = row.getCell(j);
-																cellCol.setCellType(Cell.CELL_TYPE_STRING);
-																String columnName = cellCol.getStringCellValue();
+																String volName = null;
+																try{volName = row.getCell(nameCol).toString();}catch(Exception e){}
 																
-																HSSFCell cellVal = sheet.getRow(k+1).getCell(j);
-																cellVal.setCellType(Cell.CELL_TYPE_STRING);
-																String value = cellVal.getStringCellValue();
-																if(value != null && !"".equals(value)){
-																	colMap.put(columnName, value);
-																	identMap.put(identifier, colMap);
+																if(volName != null){
+																	Integer loopSize = getRowNum(volName);
+																	for(int idx=0 ; idx<loopSize ; idx++){
+																		Integer rowNum = idx+k+1;
+																		HSSFCell cellRow = sheet.getRow(rowNum).getCell(15);
+																		cellRow.setCellType(Cell.CELL_TYPE_STRING);
+																		String rowName = cellRow.getStringCellValue();
+		
+																		HSSFCell cellCol = sheet.getRow(k).getCell(j);
+																		cellCol.setCellType(Cell.CELL_TYPE_STRING);
+																		String columnName = cellCol.getStringCellValue();
+																		
+																		HSSFCell cellVal = sheet.getRow(rowNum).getCell(j);
+																		cellVal.setCellType(Cell.CELL_TYPE_STRING);
+																		String value = cellVal.getStringCellValue();
+																		if(value != null && !"".equals(value)){
+																			colMap.put(rowName+"&"+columnName, value);
+																			identMap.put(volName, colMap);
+																		}
+																	}
 																}
 															}catch(Exception e){
 																e.printStackTrace();
 															}
-														}
-													}else{
-														try{
-															String volName = null;
-															try{volName = row.getCell(nameCol).toString();}catch(Exception e){}
 															
-															if(volName != null){
-																Integer loopSize = getRowNum(volName);
-																for(int idx=0 ; idx<loopSize ; idx++){
-																	Integer rowNum = idx+k+1;
-																	HSSFCell cellRow = sheet.getRow(rowNum).getCell(15);
-																	cellRow.setCellType(Cell.CELL_TYPE_STRING);
-																	String rowName = cellRow.getStringCellValue();
-	
-																	HSSFCell cellCol = sheet.getRow(k).getCell(j);
-																	cellCol.setCellType(Cell.CELL_TYPE_STRING);
-																	String columnName = cellCol.getStringCellValue();
-																	
-																	HSSFCell cellVal = sheet.getRow(rowNum).getCell(j);
-																	cellVal.setCellType(Cell.CELL_TYPE_STRING);
-																	String value = cellVal.getStringCellValue();
-																	if(value != null && !"".equals(value)){
-																		colMap.put(rowName+"&"+columnName, value);
-																		identMap.put(volName, colMap);
-																	}
-																}
-															}
-														}catch(Exception e){
-															e.printStackTrace();
 														}
-														
 													}
 												}
 											}
+										}catch(Exception e){
+											e.printStackTrace();
 										}
-									}catch(Exception e){
-										e.printStackTrace();
 									}
 								}
 							}
+							sheetMap.put(sheetName, identMap);
 						}
-						sheetMap.put(sheetName, identMap);
 					}
+					fileMap.put(filename, sheetMap);
+				}catch(Exception e){
+					e.printStackTrace();
 				}
-				fileMap.put(filename, sheetMap);
-			}catch(Exception e){
-				e.printStackTrace();
+			} else if(filename.contains(".csv")){
+				
 			}
 		}
 			
@@ -407,6 +411,11 @@ public class Compare {
 				intArr = new Integer[] {16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
 				
 			break;
+			
+			case "CorpBondSTATIC":
+				intArr = new Integer[] {4,5};	
+				
+			break;
 		}
 		
 		return intArr;
@@ -493,6 +502,11 @@ public class Compare {
 
 			case "Swaption_Vol":
 				rule = "2,10";
+				
+			break;
+			
+			case "CorpBondSTATIC":
+				rule = "2,10";	
 				
 			break;
 		}
