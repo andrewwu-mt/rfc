@@ -21,6 +21,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 public class Compare {
 	
+	String[] curArr = {"AED","AFN","ALL","AMD","ANG","AOA","ARS","AUD","AWG","AZN","BAM","BBD","BDT","BGN","BHD","BIF","BMD","BND","BOB","BRL","BSD","BTN","BWP","BYR","BZD","CAD","CDF","CHF","CLP","CNY","COP","CRC","CUC","CUP","CVE","CZK","DJF","DKK","DOP","DZD","EGP","ERN","ETB","EUR","FJD","FKP","GBP","GEL","GGP","GHS","GIP","GMD","GNF","GTQ","GYD","HKD","HNL","HRK","HTG","HUF","IDR","ILS","IMP","INR","IQD","IRR","ISK","JEP","JMD","JOD","JPY","KES","KGS","KHR","KMF","KPW","KRW","KWD","KYD","KZT","LAK","LBP","LKR","LRD","LSL","LTL","LYD","MAD","MDL","MGA","MKD","MMK","MNT","MOP","MRO","MUR","MVR","MWK","MXN","MYR","MZN","NAD","NGN","NIO","NOK","NPR","NZD","OMR","PAB","PEN","PGK","PHP","PKR","PLN","PYG","QAR","RON","RSD","RUB","RWF","SAR","SBD","SCR","SDG","SEK","SGD","SHP","SLL","SOS","SPL","SRD","STD","SVC","SYP","SZL","THB","TJS","TMT","TND","TOP","TRY","TTD","TVD","TWD","TZS","UAH","UGX","USD","UYU","UZS","VEF","VND","VUV","WST","XAF","XCD","XDR","XOF","XPF","YER","ZAR","ZMW","ZWD","ANY","GBp","ZAc"};
+	
 	public void startCompare(String input_path, List<String> edmList, List<String> fbList, String evalDate){
 		Map<String, Map<String, Map<String, Map<String, String>>>> edmFileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
 		Map<String, Map<String, Map<String, Map<String, String>>>> fbFileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
@@ -145,7 +147,7 @@ public class Compare {
 									if((edmVal!=null && !"".equals(edmVal)) && (fbVal!=null && !"".equals(fbVal))){
 										try{
 											if(colName.trim().equals("Coupon Rate")){
-												if(!edmVal.equals(fbVal)) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edmVal+","+fbVal+",Not same");
+												if(!edmVal.equals(fbVal)) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edmVal+","+fbVal+",Value inconsistent");
 											} else {
 												if(edmVal.contains(" ")){
 													edmVal = edmVal.split(" ")[0];
@@ -163,8 +165,29 @@ public class Compare {
 														if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + df.format(edm)+","+df.format(fb)+","+diff+"%");
 													}
 												}catch(Exception e){
-													colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edmColMap.get(colName)+","+fbColMap.get(colName)+",Empty Value");
+													colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edmColMap.get(colName)+","+fbColMap.get(colName)+",Value empty");
 												}
+											}
+											
+											//Compare Currency
+											String edmCur = "";
+											String fbCur = "";
+											for(String cur : curArr){
+												if(edmVal.contains(cur)){
+													edmCur = cur;
+													break;
+												}
+											}
+											
+											for(String cur : curArr){
+												if(fbVal.contains(cur)){
+													fbCur = cur;
+													break;
+												}
+											}
+											
+											if(!edmCur.equals(fbCur)){
+												colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edmColMap.get(colName)+","+fbColMap.get(colName)+",Currency inconsistent");
 											}
 										}catch(Exception e){
 											e.printStackTrace();
