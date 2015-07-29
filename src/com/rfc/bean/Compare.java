@@ -308,7 +308,7 @@ public class Compare {
 																	value = cell.getStringCellValue();
 																	try{
 																		Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
-																		value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+																		if(date != null) value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
 																	}catch(Exception e){}
 																}
 																
@@ -367,7 +367,7 @@ public class Compare {
 																					value = cellVal.getStringCellValue();
 																					try{
 																						Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
-																						value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+																						if(date != null) value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
 																					}catch(Exception e){}
 																				}
 																				
@@ -393,7 +393,7 @@ public class Compare {
 																			value = cellVal.getStringCellValue();
 																			try{
 																				Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
-																				value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+																				if(date != null) value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
 																			}catch(Exception e){}
 																		}
 																		
@@ -447,7 +447,7 @@ public class Compare {
 											if(value != null && !"".equals(value)){
 												try{
 													Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
-													value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+													if(date != null) value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
 												}catch(Exception e){}
 												
 												colMap.put(colName, value);

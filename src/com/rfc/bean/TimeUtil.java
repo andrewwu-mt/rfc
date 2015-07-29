@@ -118,8 +118,10 @@ public class TimeUtil {
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 			}
+			return date;
+		} else {
+			return null;
 		}
-		return date;
 	}
 	
 	public Date getDate2(String stringTime, String format) throws ParseException {
