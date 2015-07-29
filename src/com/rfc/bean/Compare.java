@@ -8,12 +8,14 @@ import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -294,8 +296,22 @@ public class Compare {
 															
 															HSSFCell cell = row.getCell(j);
 															if(cell != null){
-																cell.setCellType(Cell.CELL_TYPE_STRING);
-																String value = cell.getStringCellValue();
+																String value = "";
+																
+																if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
+																    if (HSSFDateUtil.isCellDateFormatted(cell)) {
+																    	Date date = cell.getDateCellValue();
+																    	value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+																    }
+																}else{
+																	cell.setCellType(Cell.CELL_TYPE_STRING);
+																	value = cell.getStringCellValue();
+																	try{
+																		Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
+																		value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+																	}catch(Exception e){}
+																}
+																
 																if(value != null && !"".equals(value)){
 																	colMap.put(columnName, value);
 																	identMap.put(identifier, colMap);
@@ -339,8 +355,22 @@ public class Compare {
 																			
 																			HSSFCell cellVal = sheet.getRow(rowNum).getCell(colNum);
 																			if(cellVal != null){
-																				cellVal.setCellType(Cell.CELL_TYPE_STRING);
-																				String value = cellVal.getStringCellValue();
+																				String value = "";
+																				
+																				if(cellVal.getCellType() == Cell.CELL_TYPE_NUMERIC){
+																				    if (HSSFDateUtil.isCellDateFormatted(cellVal)) {
+																				    	Date date = cellVal.getDateCellValue();
+																				    	value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+																				    }
+																				}else{
+																					cellVal.setCellType(Cell.CELL_TYPE_STRING);
+																					value = cellVal.getStringCellValue();
+																					try{
+																						Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
+																						value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+																					}catch(Exception e){}
+																				}
+																				
 																				if(value != null && !"".equals(value)){
 																					colMap.put(rowName+"&"+columnName, value);
 																					identMap.put(volName, colMap);
@@ -351,8 +381,22 @@ public class Compare {
 																} else {
 																	HSSFCell cellVal = row.getCell(j);
 																	if(cellVal != null){
-																		cellVal.setCellType(Cell.CELL_TYPE_STRING);
-																		String value = cellVal.getStringCellValue();
+																		String value = "";
+																		
+																		if(cellVal.getCellType() == Cell.CELL_TYPE_NUMERIC){
+																		    if (HSSFDateUtil.isCellDateFormatted(cellVal)) {
+																		    	Date date = cellVal.getDateCellValue();
+																		    	value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+																		    }
+																		}else{
+																			cellVal.setCellType(Cell.CELL_TYPE_STRING);
+																			value = cellVal.getStringCellValue();
+																			try{
+																				Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
+																				value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+																			}catch(Exception e){}
+																		}
+																		
 																		if(value != null && !"".equals(value)){
 																			colMap.put(topColumnName, value);
 																			identMap.put(volName, colMap);
@@ -394,13 +438,20 @@ public class Compare {
 							
 							Map<String, String> colMap = new HashMap<String, String>();
 							for(int idx=0 ; idx < dataArr.length ; idx++){
-								String colname = hDataArr[idx];
-								if(Arrays.asList(posColArr).contains(colname.trim())){
-									String value = dataArr[idx];
-									if(value != null && !"".equals(value)){
-										colMap.put(colname, value);
-										identMap.put(identifier, colMap);
+								try{
+									String colName = null;
+									try{colName = hDataArr[idx];}catch(Exception e){}
+									if(colName != null){
+										if(Arrays.asList(posColArr).contains(colName.trim())){
+											String value = dataArr[idx];
+											if(value != null && !"".equals(value)){
+												colMap.put(colName, value);
+												identMap.put(identifier, colMap);
+											}
+										}
 									}
+								}catch(Exception e){
+									e.printStackTrace();
 								}
 							}
 						}
