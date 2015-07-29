@@ -8,12 +8,23 @@
 	
 <script>
 $(document).ready(function(){
-   $("#evalDate").datepicker({ 
+	$("#evalDate").datepicker({ 
 		 dateFormat: 'yymmdd',
 		 changeMonth: true,
 		 changeYear: true,
 		 yearRange: "-20:+1",
 		 numberOfMonths: 1
+	});
+	
+	$(".submit").click(function(){
+		var evalDate = $("#evalDate").val();
+		if(evalDate != ''){
+			$(".button-wrapper").empty();
+			$(".button-wrapper").text('Processing...');
+			$("#form").submit();
+		} else {
+			alert("Please fill Evaluation Date");
+		}
 	});
 	
 });
@@ -26,7 +37,7 @@ $(document).ready(function(){
 	 		<table border="1" cellpadding="5">
 	 			<tr>
 	 				<td>Evaluation Date</td>
-	 				<td><s:textfield id="evalDate" name="evalDate" required="true" /></td>
+	 				<td><s:textfield id="evalDate" name="evalDate" /></td>
 	 			</tr>
 				<tr>
 					<td>File EDM:</td>
@@ -37,7 +48,7 @@ $(document).ready(function(){
 					<td><s:file name="fileUpload" label="Select File Fubon"/></td>
 				</tr>
 				<tr>
-					<td colspan="2"><div class="button-wrapper"><button class="submit">Submit</button></div></td>
+					<td colspan="2"><div class="button-wrapper"><button type="button" class="submit">Submit</button></div></td>
 				</tr>
 	 		</table>
  		</s:form>
