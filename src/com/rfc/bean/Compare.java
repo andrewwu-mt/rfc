@@ -445,6 +445,11 @@ public class Compare {
 										if(Arrays.asList(posColArr).contains(colName.trim())){
 											String value = dataArr[idx];
 											if(value != null && !"".equals(value)){
+												try{
+													Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
+													value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+												}catch(Exception e){}
+												
 												colMap.put(colName, value);
 												identMap.put(identifier, colMap);
 											}
