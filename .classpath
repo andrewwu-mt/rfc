@@ -26,6 +26,7 @@
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/poi-ooxml-3.11-beta3-20141111.jar"/>
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/poi-ooxml-schemas-3.11-beta3-20141111.jar"/>
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/poi-scratchpad-3.11-beta3-20141111.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/opencsv-1.7.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v7.0">
 		<attributes>
 			<attribute name="owner.project.facets" value="jst.web"/>
