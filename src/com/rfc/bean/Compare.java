@@ -28,7 +28,6 @@ public class Compare {
 	private static final Logger log = Logger.getLogger(Compare.class);
 	
 	private String[] sheetArr = {"Constant_Term_Bullet_Bond", "Constant_Term_Swap_Fixed_Leg", "Bond_For_Future", "Fixed_Rate_Bond", "T_Bill", "Constant_Term_Forex_Forward", "Constant_Term_FRA", "Curve_Index ", "Interbank_Curve", "OIS_Curve", "Treasury_Curve", "Corporate_Curve", "Depo_Curve", "Repo_Curve", "Currency_Swap_Curve", "Forward_Curve", "FRA_Curve", "Index_Growth", "IRFuture", "Market_Index", "BondFuture", "Foreign_Exchange", "Exchange_Rate", "FX_Converter", "FX_Vol_Moneyness_Term", "Bond_Vol", "CF_Vol", "Equity_Vol", "Swaption_Vol"};
-	private String[] curArr = {"AED","AFN","ALL","AMD","ANG","AOA","ARS","AUD","AWG","AZN","BAM","BBD","BDT","BGN","BHD","BIF","BMD","BND","BOB","BRL","BSD","BTN","BWP","BYR","BZD","CAD","CDF","CHF","CLP","CNY","COP","CRC","CUC","CUP","CVE","CZK","DJF","DKK","DOP","DZD","EGP","ERN","ETB","EUR","FJD","FKP","GBP","GEL","GGP","GHS","GIP","GMD","GNF","GTQ","GYD","HKD","HNL","HRK","HTG","HUF","IDR","ILS","IMP","INR","IQD","IRR","ISK","JEP","JMD","JOD","JPY","KES","KGS","KHR","KMF","KPW","KRW","KWD","KYD","KZT","LAK","LBP","LKR","LRD","LSL","LTL","LYD","MAD","MDL","MGA","MKD","MMK","MNT","MOP","MRO","MUR","MVR","MWK","MXN","MYR","MZN","NAD","NGN","NIO","NOK","NPR","NZD","OMR","PAB","PEN","PGK","PHP","PKR","PLN","PYG","QAR","RON","RSD","RUB","RWF","SAR","SBD","SCR","SDG","SEK","SGD","SHP","SLL","SOS","SPL","SRD","STD","SVC","SYP","SZL","THB","TJS","TMT","TND","TOP","TRY","TTD","TVD","TWD","TZS","UAH","UGX","USD","UYU","UZS","VEF","VND","VUV","WST","XAF","XCD","XDR","XOF","XPF","YER","ZAR","ZMW","ZWD","ANY","GBp","ZAc"};
 	private String[] colArr = {"ASE Transfer", "Business Day Rule", "Cashflow Output Currency", "Contract Size", "Currency", "Curve Unit", "Discount Curve", "Exchange Foreign Curve", "ExchangeCurve", "Foreign Curve", "Issue Date", "Maturity Date", "Net Basis", "Notional", "Procedure Parameter", "Repo Curve", "RiskMetrics Link", "Sliding Start Rule", "Sliding Term", "Strike Price", "Term", "Trade Day Rule", "Underlying", "Underlying Curve Index", "Underlying Maturity Date", "Unit", "Variable Notional", "UnifiedProductCode", "Cpn Typ", "Cpn", "Cpn Freq", "Refix Freq", "Cpn Crncy", "Crncy", "Day Cnt Des", "Issue Dt", "Maturity", "Callable"};
 	private String[] priceArr = {"Spot Price"};
 	private String[] specialSheetArr = {"T_Bill" , "Interbank_Curve" , "OIS_Curve", "Treasury_Curve" , "Corporate_Curve" , "Depo_Curve" , "Repo_Curve" , "Currency_Swap_Curve" , "Forward_Curve" , "FRA_Curve" , "Index_Growth" , "Index_Volatility" , "Exchange_Rate" , "FX_Converter" , "FX_Vol_Moneyness_Term" , "Bond_Vol" , "Equity_Vol" , "Swaption_Vol"};
@@ -478,98 +477,6 @@ public class Compare {
 	            return false;
 	    }
 	    return true;
-	}
-	
-	public Integer[] getColumnNumber(String sheetName){ 
-		Integer[] intArr = null;
-		switch(sheetName){
-			case "Constant_Term_Bullet_Bond":
-				intArr = new Integer[] {5,6};
-				
-			break;
-
-			case "Constant_Term_Swap_Fixed_Leg":
-				intArr = new Integer[] {7,8};
-				
-			break;
-
-			case "Bond_For_Future":
-				intArr = new Integer[] {14,16};
-				
-			break;
-
-			case "Fixed_Rate_Bond":
-				intArr = new Integer[] {12,14};
-				
-			break;
-
-			case "T_Bill":
-				intArr = new Integer[] {14};
-				
-			break;
-
-			case "Constant_Term_Forex_Forward":
-				intArr = new Integer[] {5};
-				
-			break;
-
-			case "Constant_Term_FRA":
-				intArr = new Integer[] {5};
-				
-			break;
-
-			case "IRFuture":
-				intArr = new Integer[] {10};
-				
-			break;
-
-			case "Market_Index":
-				intArr = new Integer[] {4};
-				
-			break;
-
-			case "BondFuture":
-				intArr = new Integer[] {9};
-				
-			break;
-
-			case "Foreign_Exchange":
-				intArr = new Integer[] {7};
-				
-			break;
-
-			case "FX_Vol_Moneyness_Term":
-				intArr = new Integer[] {16,17,18,19,20,21,22,23};
-				
-			break;
-
-			case "Bond_Vol":
-				intArr = new Integer[] {16,17,18,19,20};
-				
-			break;
-
-			case "CF_Vol":
-				intArr = new Integer[] {14,15,16,17,18,19,20};
-				
-			break;
-
-			case "Equity_Vol":
-				intArr = new Integer[] {14};
-				
-			break;
-
-			case "Swaption_Vol":
-				intArr = new Integer[] {16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
-				
-			break;
-			
-			case "CorpBondSTATIC":
-				intArr = new Integer[] {4,5};	
-				
-			break;
-		}
-		
-		return intArr;
 	}
 	
 	public String getRule(String sheetName){ 
