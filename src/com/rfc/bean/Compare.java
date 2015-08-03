@@ -29,7 +29,9 @@ public class Compare {
 	
 	private String[] priceColArr = {"Spot Price"};
 	private String[] specialSheetArr = {"T_Bill" , "Interbank_Curve" , "OIS_Curve", "Treasury_Curve" , "Corporate_Curve" , "Depo_Curve" , "Repo_Curve" , "Currency_Swap_Curve" , "Forward_Curve" , "FRA_Curve" , "Index_Growth" , "Index_Volatility" , "Exchange_Rate" , "FX_Converter" , "FX_Vol_Moneyness_Term" , "Bond_Vol" , "Equity_Vol" , "Swaption_Vol"};
-	private String[] excludeSheetArr = {"BondFuture_Option", "EURUSDFUT_Option", "Index_Option"};
+	private String[] excludeSheetArr = {""};
+	
+	private String[] optionColArr = {"Type", "Currency", "Maturity Date", "Volatility", "Volatility Surface", "RiskMetrics Map Procedure", "Discount Curve", "*Theoretical Model", "*Market Model", "Settlement Type", "Settlement Procedure", "Volatility Type"};
 	
 	public void startCompare(String input_path, List<String> edmList, List<String> fbList, String evalDate){
 		Map<String, Map<String, Map<String, Map<String, String>>>> edmFileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
@@ -148,13 +150,13 @@ public class Compare {
 		DecimalFormat df = new DecimalFormat("#.#");
         df.setMaximumFractionDigits(8);
         
-		for(String filename : edmFileMap.keySet()){
+		for(String filename : fbFileMap.keySet()){
 			Map<String, Map<String, Map<String, String>>> edmSheetMap = edmFileMap.get(filename);
 			Map<String, Map<String, Map<String, String>>> fbSheetMap = fbFileMap.get(filename);
 			
 			if(edmSheetMap != null && fbSheetMap != null){
 				Map<String, Map<String, Map<String, String>>> sheetMap = new HashMap<String, Map<String, Map<String, String>>>();
-				for(String sheetName : edmSheetMap.keySet()){
+				for(String sheetName : fbSheetMap.keySet()){
 					String rule = getRule(sheetName.trim());
 					Integer ruleType = 0;
 					Double ruleLimit = 0.0;
@@ -171,53 +173,60 @@ public class Compare {
 					Map<String, Map<String, String>> edmIdentMap = edmSheetMap.get(sheetName);
 					Map<String, Map<String, String>> fbIdentMap = fbSheetMap.get(sheetName);
 					
-					if(edmIdentMap != null && fbIdentMap != null){
+					if(fbIdentMap != null){
 						Map<String, Map<String, String>> identMap = new HashMap<String, Map<String, String>>();
-						for(String identifier : edmIdentMap.keySet()){
+						for(String identifier : fbIdentMap.keySet()){
 							Map<String, String> edmColMap = edmIdentMap.get(identifier);
 							Map<String, String> fbColMap = fbIdentMap.get(identifier);
 							
-							if(edmColMap != null && fbColMap != null){
+							if(fbColMap != null){
 								Map<String, String> colMap = new HashMap<String, String>();
-								for(String colName : edmColMap.keySet()){
-									String edmVal = edmColMap.get(colName);
-									String fbVal = fbColMap.get(colName);
-									
-									if((edmVal!=null && !"".equals(edmVal)) && (fbVal!=null && !"".equals(fbVal))){
-										try{
-											if(Arrays.asList(priceColArr).contains(colName.trim())) {
-												if(edmVal.contains(" ")){
-													edmVal = edmVal.split(" ")[0];
-													fbVal = fbVal.split(" ")[0];
-												}
-												
+								if(edmColMap == null){
+									colMap.put("", ruleTypeStr + "," + ruleLimit + ",,"+identifier+",Risk Factor ID not found");
+								} else {
+									for(String colName : fbColMap.keySet()){
+										String edmVal = edmColMap.get(colName);
+										String fbVal = fbColMap.get(colName);
+										
+										if(fbVal!=null && !"".equals(fbVal)){
+	
+											if(edmVal == null || "".equals(edmVal)){
+												colMap.put(colName, ruleTypeStr + "," + ruleLimit + ",,"+fbVal+",Value empty");
+											} else {
 												try{
-													Double edm = Double.valueOf(edmVal);
-													Double fb = Double.valueOf(fbVal);
-													if(ruleType == 1){
-														Double diff = Math.abs(fb-edm);
-														if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + df.format(edm)+","+df.format(fb)+","+diff);
+													if(Arrays.asList(priceColArr).contains(colName.trim())) {
+														if(edmVal.contains(" ")){
+															edmVal = edmVal.split(" ")[0];
+															fbVal = fbVal.split(" ")[0];
+														}
+														
+														try{
+															Double edm = Double.valueOf(edmVal);
+															Double fb = Double.valueOf(fbVal);
+															if(ruleType == 1){
+																Double diff = Math.abs(fb-edm);
+																if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + df.format(edm)+","+df.format(fb)+","+diff);
+															} else {
+																Double diff = (Math.abs(fb-edm) / fb) * 100;
+																if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + df.format(edm)+","+df.format(fb)+","+diff+"%");
+															}
+														}catch(Exception e){
+															colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edmColMap.get(colName)+","+fbColMap.get(colName)+",Value empty");
+														}
 													} else {
-														Double diff = (Math.abs(fb-edm) / fb) * 100;
-														if(diff > ruleLimit) colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + df.format(edm)+","+df.format(fb)+","+diff+"%");
+														if(colName.trim().toLowerCase().contains("procedure parameter")){
+															String differ = compareProcedureParameter(edmVal, fbVal);
+															if(!differ.equals("")) colMap.put(colName, "Equal,N/A" + "," + edmVal.replace(",", "|")+","+fbVal.replace(",", "|")+","+differ);
+														} else{
+															if(!edmVal.equals(fbVal)) colMap.put(colName, "Equal,N/A" + "," + edmVal+","+fbVal+",Value inconsistent");
+														}
 													}
 												}catch(Exception e){
-													colMap.put(colName, ruleTypeStr + "," + ruleLimit + "," + edmColMap.get(colName)+","+fbColMap.get(colName)+",Value empty");
-												}
-											} else {
-												if(colName.trim().toLowerCase().contains("procedure parameter")){
-													String differ = compareProcedureParameter(edmVal, fbVal);
-													if(!differ.equals("")) colMap.put(colName, "Equal,N/A" + "," + edmVal.replace(",", "|")+","+fbVal.replace(",", "|")+","+differ);
-												} else{
-													if(!edmVal.equals(fbVal)) colMap.put(colName, "Equal,N/A" + "," + edmVal+","+fbVal+",Value inconsistent");
+													System.out.println("ERROR");
 												}
 											}
-										}catch(Exception e){
-											e.printStackTrace();
 										}
 									}
-									
-									
 								}
 								if(colMap.size() != 0) identMap.put(identifier, colMap);
 							}
@@ -309,8 +318,20 @@ public class Compare {
 																}
 																
 																if(value != null && !"".equals(value)){
-																	colMap.put(columnName, value);
-																	identMap.put(identifier, colMap);
+																	if(sheetName.equals("BondFuture_Option") || sheetName.equals("EURUSDFUT_Option")){
+																		if(Arrays.asList(optionColArr).contains(columnName.trim())){
+																			String underlying = getOptionKey(row, 7);
+																			String maturity = getOptionKey(row, 8);
+																			String putCall = getOptionKey(row, 10);
+																			
+																			String optIdentifier = underlying+maturity+putCall;
+																			colMap.put(columnName, value);
+																			identMap.put(optIdentifier, colMap);
+																		}
+																	} else {
+																		colMap.put(columnName, value);
+																		identMap.put(identifier, colMap);
+																	}
 																}
 															}
 														}
@@ -420,6 +441,7 @@ public class Compare {
 					e.printStackTrace();
 				}
 			} else if(filename.contains(".csv")){
+				log.info("Sheet: " + filename);
 				try{
 					CSVReader reader = new CSVReader( new InputStreamReader(new FileInputStream(path+filename), "Big5"));
 					List<String[]> dataArrList = reader.readAll();
@@ -431,6 +453,7 @@ public class Compare {
 						if(i>0){
 							String[] dataArr = dataArrList.get(i);
 							String identifier = dataArr[0];
+							if(!filename.contains("CorpBondSTATIC") && !filename.contains("GovtBondStatSpot")) identifier = dataArr[2];
 							
 							Map<String, String> colMap = new HashMap<String, String>();
 							for(int idx=0 ; idx < dataArr.length ; idx++){
@@ -465,6 +488,26 @@ public class Compare {
 			}
 		}
 			
+	}
+	
+	public String getOptionKey(HSSFRow row, Integer cellnum){
+		String value = "";
+		HSSFCell cell = row.getCell(cellnum);
+		if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
+		    if (HSSFDateUtil.isCellDateFormatted(cell)) {
+		    	Date date = cell.getDateCellValue();
+		    	value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+		    }
+		}else{
+			cell.setCellType(Cell.CELL_TYPE_STRING);
+			value = cell.getStringCellValue();
+			try{
+				Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
+				if(date != null) value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+			}catch(Exception e){}
+		}
+		
+		return value;
 	}
 	
 	public static boolean isRowEmpty(Row row) {
