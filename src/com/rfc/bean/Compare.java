@@ -27,12 +27,9 @@ import au.com.bytecode.opencsv.CSVReader;
 public class Compare {
 	private static final Logger log = Logger.getLogger(Compare.class);
 	
-	private String[] sheetArr = {"Constant_Term_Bullet_Bond", "Constant_Term_Swap_Fixed_Leg", "Bond_For_Future", "Fixed_Rate_Bond", "T_Bill", "Constant_Term_Forex_Forward", "Constant_Term_FRA", "Curve_Index ", "Interbank_Curve", "OIS_Curve", "Treasury_Curve", "Corporate_Curve", "Depo_Curve", "Repo_Curve", "Currency_Swap_Curve", "Forward_Curve", "FRA_Curve", "Index_Growth", "IRFuture", "Market_Index", "BondFuture", "Foreign_Exchange", "Exchange_Rate", "FX_Converter", "FX_Vol_Moneyness_Term", "Bond_Vol", "CF_Vol", "Equity_Vol", "Swaption_Vol"};
-//	private String[] colArr = {"ASE Transfer", "Business Day Rule", "Cashflow Output Currency", "Contract Size", "Currency", "Curve Unit", "Discount Curve", "Exchange Foreign Curve", "ExchangeCurve", "Foreign Curve", "Issue Date", "Maturity Date", "Net Basis", "Notional", "Procedure Parameter", "Repo Curve", "RiskMetrics Link", "Sliding Start Rule", "Sliding Term", "Strike Price", "Term", "Trade Day Rule", "Underlying", "Underlying Curve Index", "Underlying Maturity Date", "Unit", "Variable Notional", "UnifiedProductCode", "Cpn Typ", "Cpn", "Cpn Freq", "Refix Freq", "Cpn Crncy", "Crncy", "Day Cnt Des", "Issue Dt", "Maturity", "Callable"};
-	private String[] priceArr = {"Spot Price"};
+	private String[] priceColArr = {"Spot Price"};
 	private String[] specialSheetArr = {"T_Bill" , "Interbank_Curve" , "OIS_Curve", "Treasury_Curve" , "Corporate_Curve" , "Depo_Curve" , "Repo_Curve" , "Currency_Swap_Curve" , "Forward_Curve" , "FRA_Curve" , "Index_Growth" , "Index_Volatility" , "Exchange_Rate" , "FX_Converter" , "FX_Vol_Moneyness_Term" , "Bond_Vol" , "Equity_Vol" , "Swaption_Vol"};
-	
-//	private String[] posColArr = {"UnifiedProductCode", "Cpn Typ", "Cpn", "Cpn Freq", "Refix Freq", "Cpn Crncy", "Crncy", "Day Cnt Des", "Issue Dt", "Maturity", "Callable"};
+	private String[] excludeSheetArr = {"BondFuture_Option", "EURUSDFUT_Option", "Index_Option"};
 	
 	public void startCompare(String input_path, List<String> edmList, List<String> fbList, String evalDate){
 		Map<String, Map<String, Map<String, Map<String, String>>>> edmFileMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
@@ -188,14 +185,7 @@ public class Compare {
 									
 									if((edmVal!=null && !"".equals(edmVal)) && (fbVal!=null && !"".equals(fbVal))){
 										try{
-											/*if(Arrays.asList(colArr).contains(colName.trim())){
-												if(colName.trim().toLowerCase().contains("procedure parameter")){
-													String differ = compareProcedureParameter(edmVal, fbVal);
-													if(!differ.equals("")) colMap.put(colName, "Equal,N/A" + "," + edmVal.replace(",", "|")+","+fbVal.replace(",", "|")+","+differ);
-												} else{
-													if(!edmVal.equals(fbVal)) colMap.put(colName, "Equal,N/A" + "," + edmVal+","+fbVal+",Value inconsistent");
-												}
-											} else */if(Arrays.asList(priceArr).contains(colName.trim())) {
+											if(Arrays.asList(priceColArr).contains(colName.trim())) {
 												if(edmVal.contains(" ")){
 													edmVal = edmVal.split(" ")[0];
 													fbVal = fbVal.split(" ")[0];
@@ -275,8 +265,8 @@ public class Compare {
 					for(int i=0 ; i<wb.getNumberOfSheets() ; i++){
 						HSSFSheet sheet = wb.getSheetAt(i);
 						String sheetName = sheet.getSheetName();
-						
-						if(Arrays.asList(sheetArr).contains(sheetName.trim())){
+
+						if(!Arrays.asList(excludeSheetArr).contains(sheetName.trim())){
 							log.info("Sheet: " + sheetName);
 							Integer nameCol = 0;
 							if(Arrays.asList(specialSheetArr).contains(sheetName)) nameCol = 1;

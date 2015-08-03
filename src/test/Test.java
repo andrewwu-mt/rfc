@@ -1,13 +1,13 @@
 package test;
 
-import java.util.Arrays;
 
 public class Test {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		String[] arr = {"Cpn Crn"};
-		System.out.println(Arrays.asList(arr).contains("Cpn"));
+		String str = "12.42423 SMP Actual/360";
+		str = str.replaceAll("[^\\d.]", "");
+		
+		System.out.println(str);
 	}
 
 }
