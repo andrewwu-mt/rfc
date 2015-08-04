@@ -13,6 +13,9 @@
         	<result name="success">/WEB-INF/jsp/{1}.jsp</result>
 		</action>
 		 
+		<action name="delete-file" class="com.rfc.action.CompareAction" method="deleteFile">
+			<result name="successdelete" type="result-message">index</result>
+		</action>   
 		<action name="compare-file" class="com.rfc.action.CompareAction" method="compareFile">
 			<result name="success" type="result-message">index</result>
 		</action>   

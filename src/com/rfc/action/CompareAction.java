@@ -22,12 +22,25 @@ public class CompareAction extends ActionSupport{
 	private List<String> fileUploadFileName = new ArrayList<String>();
 	
 	private String evalDate;
+	private String name;
 	
 	public void checkFolder(String output_path){
 		File outputPath = new File(output_path);
 		if(!outputPath.exists()){
 			outputPath.mkdirs();
 		}
+	}
+	
+	public String deleteFile(){
+		try{
+			String output_path = new LoadProperties().load("output.path");
+			File file = new File(output_path, name);
+			FileUtils.deleteQuietly(file);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		return "successdelete";
 	}
 	
 	public String compareFile() {
@@ -96,6 +109,14 @@ public class CompareAction extends ActionSupport{
 
 	public void setEvalDate(String evalDate) {
 		this.evalDate = evalDate;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

@@ -78,10 +78,10 @@ public class ResultMessage extends StrutsResultSupport  {
 		
 		PrintWriter out = response.getWriter();
 		StringBuffer buffer = new StringBuffer();
-		String message = "Update success";
+		String message = "Completed";
 		boolean showalert = true;
-		if(invocation.getResultCode().equalsIgnoreCase(ActionSupport.SUCCESS)) {
-			message = "Completed";
+		if(invocation.getResultCode().equalsIgnoreCase("successdelete")) {
+			message = "Delete success";
 		}
 		buffer.append("<script type=\"text/javascript\">");
 		if(showalert) {
