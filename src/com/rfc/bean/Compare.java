@@ -325,8 +325,10 @@ public class Compare {
 																			String putCall = getOptionKey(row, 10);
 																			
 																			String optIdentifier = underlying+maturity+putCall;
-																			colMap.put(columnName, value);
-																			identMap.put(optIdentifier, colMap);
+																			if(identMap.get(optIdentifier) == null || identMap.get(identifier).get(columnName) == null){
+																				colMap.put(columnName, value);
+																				identMap.put(optIdentifier, colMap);
+																			}
 																		}
 																	} else {
 																		colMap.put(columnName, value);

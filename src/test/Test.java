@@ -1,13 +1,18 @@
 package test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class Test {
 
 	public static void main(String[] args) {
-		String str = "12.42423 SMP Actual/360";
-		str = str.replaceAll("[^\\d.]", "");
+		Map<String, Map<String, String>> map1 = new HashMap<String, Map<String, String>>();
+		Map<String, String> map2 = new HashMap<String, String>();
 		
-		System.out.println(str);
+		if(map1.get("test") == null || map1.get("test").get("test") == null){
+			System.out.println("Empty");
+		}
 	}
 
 }
