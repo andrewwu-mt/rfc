@@ -14,8 +14,6 @@
 			<s:iterator value="#request.filenameList" >
 				<tr>
 					<td><a href="result-download?fileName=<s:property  />"><s:property  /></a></td>
-				</tr>
-				<tr>
 					<td><a href="delete-file?name=<s:property  />">Delete</a></td>
 				</tr>
 			</s:iterator>
