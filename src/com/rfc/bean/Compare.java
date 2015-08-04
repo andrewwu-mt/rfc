@@ -403,8 +403,8 @@ public class Compare {
 								String maturity = getOptionKey(row, 8);
 								String putCall = getOptionKey(row, 10);
 								
-								String optIdentifier = underlying+maturity+putCall;
-								if(identMap.get(optIdentifier) == null || identMap.get(identifier).get(columnName) == null){
+								String optIdentifier = underlying+ " " +maturity+ " " +putCall;
+								if(identMap.get(optIdentifier) == null || identMap.get(optIdentifier).get(columnName) == null){
 									colMap.put(columnName, value);
 									identMap.put(optIdentifier, colMap);
 								}
