@@ -314,6 +314,7 @@ public class Compare {
 						}
 					}
 					fileMap.put(filename, sheetMap);
+					is.close();
 				}catch(Exception e){
 					e.printStackTrace();
 				}
@@ -323,7 +324,7 @@ public class Compare {
 					CSVReader reader = new CSVReader( new InputStreamReader(new FileInputStream(path+filename), "Big5"));
 					List<String[]> dataArrList = reader.readAll();
 					String[] hDataArr = dataArrList.get(0);
-
+					
 					Map<String, Map<String, Map<String, String>>> sheetMap = new HashMap<String, Map<String, Map<String, String>>>();
 					Map<String, Map<String, String>> identMap = new HashMap<String, Map<String, String>>();
 					for(int i=0 ; i<dataArrList.size() ; i++){
@@ -359,6 +360,7 @@ public class Compare {
 					}
 					sheetMap.put(filename, identMap);
 					fileMap.put(filename, sheetMap);
+					reader.close();
 				}catch(Exception e){
 					e.printStackTrace();
 				}

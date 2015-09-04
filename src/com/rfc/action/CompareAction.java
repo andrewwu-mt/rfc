@@ -73,10 +73,11 @@ public class CompareAction extends ActionSupport{
 
 			//Delete uploaded files
 			File pathFolder = new File(input_path);
-			FileUtils.deleteDirectory(pathFolder);
+			FileUtils.deleteQuietly(pathFolder);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
+			log.error("", e);
 			return INPUT;
 		}
 		return SUCCESS;

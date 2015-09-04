@@ -68,5 +68,15 @@ public class ResultAction extends ActionSupport{
 	public void setDownloadFile(InputStream downloadFile) {
 		this.downloadFile = downloadFile;
 	}
+
+
+	public Long getContentLength() {
+		return contentLength;
+	}
+
+
+	public void setContentLength(Long contentLength) {
+		this.contentLength = contentLength;
+	}
 	
 }
