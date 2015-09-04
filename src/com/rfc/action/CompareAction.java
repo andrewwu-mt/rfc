@@ -70,7 +70,10 @@ public class CompareAction extends ActionSupport{
 			}
 			
 			new Compare().startCompare(input_path, edmList, fbList, evalDate); //Start comparing
-			
+
+			//Delete uploaded files
+			File pathFolder = new File(input_path);
+			FileUtils.deleteDirectory(pathFolder);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
