@@ -28,7 +28,7 @@ public class Compare {
 	private static final Logger log = Logger.getLogger(Compare.class);
 	
 	private String[] priceColArr = {"Spot Price", "Strike Price"};
-	private String[] specialSheetArr = {"T_Bill" , "Interbank_Curve" , "OIS_Curve", "Treasury_Curve" , "Corporate_Curve" , "Depo_Curve" , "Repo_Curve" , "Currency_Swap_Curve" , "Forward_Curve" , "FRA_Curve" , "Index_Growth" , "Index_Volatility" , "Exchange_Rate" , "FX_Converter" , "FX_Vol_Moneyness_Term" , "Bond_Vol" , "Equity_Vol" , "Swaption_Vol"};
+	private String[] specialSheetArr = {"T_Bill" , "Interbank_Curve" , "OIS_Curve", "Treasury_Curve" , "Corporate_Curve" , "Depo_Curve" , "Repo_Curve" , "Currency_Swap_Curve" , "Forward_Curve" , "FRA_Curve" , "Index_Growth" , "Index_Volatility" , "Exchange_Rate" , "FX_Converter" , "FX_Vol_Moneyness_Term" , "Bond_Vol" , "CF_Vol" , "Equity_Vol" , "Swaption_Vol"};
 	private String[] excludeSheetArr = {""};
 	
 	private String[] optionColArr = {"Type", "Currency", "Maturity Date", "Volatility", "Volatility Surface", "RiskMetrics Map Procedure", "Discount Curve", "*Theoretical Model", "*Market Model", "Settlement Type", "Settlement Procedure", "Volatility Type"};
