@@ -20,6 +20,7 @@ import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 
 import au.com.bytecode.opencsv.CSVReader;
@@ -157,6 +158,9 @@ public class Compare {
 			if(edmSheetMap != null && fbSheetMap != null){
 				Map<String, Map<String, Map<String, String>>> sheetMap = new HashMap<String, Map<String, Map<String, String>>>();
 				for(String sheetName : fbSheetMap.keySet()){
+					if(sheetName.equals("Equity_Vol")){
+						System.out.println();
+					}
 					String rule = getRule(sheetName.trim());
 					Integer ruleType = 0;
 					Double ruleLimit = 0.0;
@@ -176,6 +180,10 @@ public class Compare {
 					if(fbIdentMap != null){
 						Map<String, Map<String, String>> identMap = new HashMap<String, Map<String, String>>();
 						for(String identifier : fbIdentMap.keySet()){
+							if(identifier.equals("1419 Vol")){
+								System.out.println();
+							}
+							
 							Map<String, String> edmColMap = edmIdentMap.get(identifier);
 							Map<String, String> fbColMap = fbIdentMap.get(identifier);
 							
@@ -194,7 +202,7 @@ public class Compare {
 												colMap.put(colName, ruleTypeStr + "," + ruleLimit + ",,"+fbVal+",Value empty");
 											} else {
 												try{
-													if(Arrays.asList(priceColArr).contains(colName.trim())) {
+													if(Arrays.asList(priceColArr).contains(colName.trim()) || colName.trim().contains("&")) {
 														if(edmVal.contains(" ")){
 															edmVal = edmVal.split(" ")[0];
 															fbVal = fbVal.split(" ")[0];
@@ -372,31 +380,15 @@ public class Compare {
 	public void gatherNormalSheet(HSSFSheet sheet, String sheetName, HSSFRow row, Integer nameCol, Integer j, Map<String, Map<String, String>> identMap, Map<String, String> colMap){
 		HSSFCell identCell = row.getCell(nameCol);
 		if(identCell != null){
-			identCell.setCellType(Cell.CELL_TYPE_STRING);
-			String identifier = identCell.getStringCellValue();
+			String identifier = checkCellValue(identCell);
 			
 			HSSFCell cellCol = sheet.getRow(0).getCell(j);
 			if(cellCol != null){
-				cellCol.setCellType(Cell.CELL_TYPE_STRING);
-				String columnName = cellCol.getStringCellValue();
+				String columnName = checkCellValue(cellCol);
 				
 				HSSFCell cell = row.getCell(j);
 				if(cell != null){
-					String value = "";
-					
-					if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
-					    if (HSSFDateUtil.isCellDateFormatted(cell)) {
-					    	Date date = cell.getDateCellValue();
-					    	value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
-					    }
-					}else{
-						cell.setCellType(Cell.CELL_TYPE_STRING);
-						value = cell.getStringCellValue();
-						try{
-							Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
-							if(date != null) value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
-						}catch(Exception e){}
-					}
+					String value = checkCellValue(cell);
 					
 					if(value != null && !"".equals(value)){
 						if(sheetName.equals("BondFuture_Option") || sheetName.equals("EURUSDFUT_Option")){
@@ -423,91 +415,107 @@ public class Compare {
 	}
 	
 	public void gatherVolSheet(HSSFSheet sheet, String sheetName, HSSFRow row, Integer nameCol, Integer j, Integer k, Map<String, Map<String, String>> identMap, Map<String, String> colMap){
+
+		if(sheetName.equals("Equity_Vol")){
+			System.out.println();
+		}
+		
 		String volName = null;
 		try{volName = row.getCell(nameCol).toString();}catch(Exception e){}
 		
 		if(volName != null &&!"".equals(volName)){
+			if(volName.equals("1419 Vol")){
+				System.out.println();
+			}
+			
 			HSSFCell topCellCol = sheet.getRow(0).getCell(j);
 			if(topCellCol != null){
-				topCellCol.setCellType(Cell.CELL_TYPE_STRING);
-				String topColumnName = topCellCol.getStringCellValue();
+				String topColumnName = checkCellValue(topCellCol);
 				
-				if(topColumnName.toLowerCase().equals("surface")){
-					Integer totalVolCol = 17;
-					Integer loopSize = 1;
-					if(sheetName.toLowerCase().contains("swaption_vol")) loopSize = getRowNum(volName);
-					
-					for(int idx=0 ; idx<loopSize ; idx++){
-						Integer rowNum = idx+k+1;
-						HSSFCell cellRow = sheet.getRow(rowNum).getCell(j);
-						String rowName = "";
-						try{
-							cellRow.setCellType(Cell.CELL_TYPE_STRING);
-							rowName = cellRow.getStringCellValue();
-						}catch(Exception e){}
+				if(!"".equals(topColumnName) && topColumnName != null){
+					if(topColumnName.toLowerCase().equals("surface")){
+						Integer totalVolCol = 17;
+						Integer loopSize = 1;
+						if(sheetName.toLowerCase().contains("swaption_vol")) loopSize = getRowNum(volName);
 						
-						for(int volColIdx=0 ; volColIdx<totalVolCol ; volColIdx++){
-							Integer colNum = volColIdx+j+1;
-							HSSFCell cellCol = sheet.getRow(k).getCell(colNum);
-							String columnName = "";
+						for(int idx=0 ; idx<loopSize ; idx++){
+							Integer rowNum = idx+k+1;
+							HSSFCell cellRow = sheet.getRow(rowNum).getCell(j);
+							String rowName = "";
 							try{
-								cellCol.setCellType(Cell.CELL_TYPE_STRING);
-								columnName = cellCol.getStringCellValue();
+								rowName = checkCellValue(cellRow);
 							}catch(Exception e){}
 							
-							HSSFCell cellVal = sheet.getRow(rowNum).getCell(colNum);
-							if(cellVal != null){
-								String value = "";
+							for(int volColIdx=0 ; volColIdx<totalVolCol ; volColIdx++){
+								Integer colNum = volColIdx+j+1;
+								HSSFCell cellCol = sheet.getRow(k).getCell(colNum);
+								String columnName = "";
+								try{
+									columnName = checkCellValue(cellCol);
+								}catch(Exception e){}
 								
-								if(cellVal.getCellType() == Cell.CELL_TYPE_NUMERIC){
-								    if (HSSFDateUtil.isCellDateFormatted(cellVal)) {
-								    	Date date = cellVal.getDateCellValue();
-								    	value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
-								    }
-								}else{
-									cellVal.setCellType(Cell.CELL_TYPE_STRING);
-									value = cellVal.getStringCellValue();
-									try{
-										Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
-										if(date != null) value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
-									}catch(Exception e){}
-								}
-								
-								if(value != null && !"".equals(value)){
-									colMap.put(rowName+"&"+columnName, value);
-									identMap.put(volName, colMap);
+								HSSFCell cellVal = sheet.getRow(rowNum).getCell(colNum);
+								if(cellVal != null){
+									String value = checkCellValue(cellVal);
+
+									if(value != null && !"".equals(value)){
+										colMap.put(rowName+"&"+columnName, value);
+										identMap.put(volName, colMap);
+									}
 								}
 							}
 						}
-					}
-				} else {
-					HSSFCell cellVal = row.getCell(j);
-					if(cellVal != null){
-						String value = "";
-						
-						if(cellVal.getCellType() == Cell.CELL_TYPE_NUMERIC){
-						    if (HSSFDateUtil.isCellDateFormatted(cellVal)) {
-						    	Date date = cellVal.getDateCellValue();
-						    	value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
-						    }
-						}else{
-							cellVal.setCellType(Cell.CELL_TYPE_STRING);
-							value = cellVal.getStringCellValue();
-							try{
-								Date date = new TimeUtil().getDate(value, "yyyy/MM/dd");
-								if(date != null) value = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
-							}catch(Exception e){}
-						}
-						
-						if(value != null && !"".equals(value)){
-							colMap.put(topColumnName, value);
-							identMap.put(volName, colMap);
+					} else {
+						HSSFCell cellVal = row.getCell(j);
+						if(cellVal != null){
+							String value = checkCellValue(cellVal);
+							
+							if(value != null && !"".equals(value)){
+								colMap.put(topColumnName, value);
+								identMap.put(volName, colMap);
+							}
 						}
 					}
 				}
 			}
 		}
 	
+	}
+
+	public String checkCellValue(Cell cell) {
+		String result = "";
+		try {
+			
+			switch (cell.getCellType()) {
+	            case Cell.CELL_TYPE_STRING:
+	                result = cell.getStringCellValue();
+	                break;
+	            case Cell.CELL_TYPE_NUMERIC:
+	                if (DateUtil.isCellDateFormatted(cell)) {
+	                	Date date = cell.getDateCellValue();
+	                	result = new TimeUtil().getDateFormat(date, "yyyy/MM/dd");
+	                } else {
+	                	DecimalFormat df = new DecimalFormat("#.##########");
+	                	Double d = cell.getNumericCellValue();
+	                	result = df.format(d);
+	                }
+	                break;
+	            case Cell.CELL_TYPE_BOOLEAN:
+	            	cell.setCellType(Cell.CELL_TYPE_STRING);
+	            	result = cell.getStringCellValue();
+	                break;
+	            case Cell.CELL_TYPE_FORMULA:
+	            	cell.setCellType(Cell.CELL_TYPE_STRING);
+	            	result = cell.getStringCellValue();
+	                break;
+	            default:
+                // some code
+			}
+		} catch(Exception e) {
+		
+		}
+		
+		return result;
 	}
 	
 	public String getOptionKey(HSSFRow row, Integer cellnum){
